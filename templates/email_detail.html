@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ email.subject }} – SpamDetector{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Email Detail</h2>
+  <a href="{{ url_for('inbox') }}" class="btn btn-outline">Back to Inbox</a>
+</div>
+
+<div class="email-detail-card">
+  <div class="email-detail-header">
+    <div class="email-detail-meta">
+      <div class="meta-row"><span class="meta-label">From</span> <span class="meta-value">{{ email.sender.username }}</span></div>
+      <div class="meta-row"><span class="meta-label">To</span>   <span class="meta-value">{{ email.recipient.username }}</span></div>
+      <div class="meta-row"><span class="meta-label">Date</span> <span class="meta-value">{{ email.sent_at.strftime('%B %d, %Y at %H:%M') }}</span></div>
+    </div>
+    {% if email.spam_label %}
+    <span class="badge badge-{{ email.spam_label }} badge-lg">
+      {{ email.spam_label | upper }}
+      {% if email.spam_confidence %}
+        · {{ (email.spam_confidence * 100) | round(0) | int }}%
+      {% endif %}
+    </span>
+    {% endif %}
+  </div>
+
+  <h3 class="email-detail-subject">{{ email.subject }}</h3>
+
+  <div class="email-detail-body">{{ email.body }}</div>
+</div>
+
+{% if email.spam_label %}
+<div class="spam-analysis-card">
+  <h3>Spam Analysis</h3>
+
+  <div class="spam-result-header spam-result-{{ email.spam_label }}">
+    <span class="spam-verdict">
+      {% if email.spam_label == 'spam' %}⚠ Classified as SPAM{% else %}✔ Classified as Ham (Safe){% endif %}
+    </span>
+    {% if email.spam_confidence %}
+    <span class="spam-confidence">Confidence: {{ (email.spam_confidence * 100) | round(1) }}%</span>
+    {% endif %}
+  </div>
+
+  {% if email.spam_safe_summary %}
+  <p class="spam-summary">{{ email.spam_safe_summary }}</p>
+  {% endif %}
+
+  {% if reasons %}
+  <div class="spam-section">
+    <h4>Reasons</h4>
+    <ul>
+      {% for reason in reasons %}
+      <li>{{ reason }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if risk_flags %}
+  <div class="spam-section">
+    <h4>Risk Flags</h4>
+    <div class="flag-list">
+      {% for flag in risk_flags %}
+      <span class="flag-tag">{{ flag }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
