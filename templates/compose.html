@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Compose – SpamDetector{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Compose Email</h2>
+  <a href="{{ url_for('inbox') }}" class="btn btn-outline">Back to Inbox</a>
+</div>
+
+<div class="compose-layout">
+  <div class="compose-form-wrap">
+    <form method="POST" action="{{ url_for('compose') }}" class="compose-form">
+      <div class="form-group">
+        <label for="recipient">To (username)</label>
+        <input type="text" id="recipient" name="recipient" placeholder="Recipient username"
+               value="{{ form_data.get('recipient', '') }}" required />
+      </div>
+      <div class="form-group">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" name="subject" placeholder="Email subject"
+               value="{{ form_data.get('subject', '') }}" required />
+      </div>
+      <div class="form-group">
+        <label for="body">Message</label>
+        <textarea id="body" name="body" rows="10" placeholder="Type your message here…" required>{{ form_data.get('body', '') }}</textarea>
+      </div>
+      <div class="compose-actions">
+        <button type="submit" name="action" value="check" class="btn btn-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Check for Spam
+        </button>
+        <button type="submit" name="action" value="send" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Send
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {% if spam_result %}
+  <div class="spam-result-panel">
+    <div class="spam-result-header spam-result-{{ spam_result.label }}">
+      <span class="spam-verdict">
+        {% if spam_result.label == 'spam' %}
+          ⚠ SPAM DETECTED
+        {% else %}
+          ✔ Looks Safe (Ham)
+        {% endif %}
+      </span>
+      <span class="spam-confidence">
+        Confidence: {{ (spam_result.confidence * 100) | round(1) }}%
+      </span>
+    </div>
+
+    <div class="spam-result-body">
+      <p class="spam-summary">{{ spam_result.safe_summary }}</p>
+
+      {% if spam_result.reasons %}
+      <div class="spam-section">
+        <h4>Reasons</h4>
+        <ul>
+          {% for reason in spam_result.reasons %}
+          <li>{{ reason }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if spam_result.risk_flags %}
+      <div class="spam-section">
+        <h4>Risk Flags</h4>
+        <div class="flag-list">
+          {% for flag in spam_result.risk_flags %}
+          <span class="flag-tag">{{ flag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
