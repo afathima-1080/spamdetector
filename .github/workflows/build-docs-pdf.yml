@@ -1,0 +1,70 @@
+name: Build Documentation PDF
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "copilot/create-file-structure-flask-app"
+      - "copilot/add-github-actions-pdf-workflow"
+    paths:
+      - "docs/*.md"
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Pandoc and XeLaTeX
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            pandoc \
+            texlive-xetex \
+            texlive-fonts-recommended \
+            texlive-latex-extra \
+            fonts-liberation
+
+      - name: Create docs/old directory
+        run: mkdir -p docs/old
+
+      - name: Archive old PDF to docs/old/
+        run: |
+          OLD_PDF="docs/Probe Attack Prediction Using ML(DA2232306010006) SAIDEEPA NV.pdf"
+          if [ -f "$OLD_PDF" ]; then
+            cp "$OLD_PDF" "docs/old/Probe Attack Prediction Using ML(DA2232306010006) SAIDEEPA NV.pdf"
+            echo "Archived old PDF to docs/old/"
+          else
+            echo "Old PDF not found — skipping archive step."
+          fi
+
+      - name: Convert Markdown to PDF
+        run: |
+          pandoc "docs/Email-Spam-Detector-Documentation-2026.md" \
+            --pdf-engine=xelatex \
+            -o "docs/Email-Spam-Detector-Documentation-2026.pdf" \
+            -V geometry:margin=1in \
+            -V fontsize=11pt \
+            -V mainfont="Liberation Serif" \
+            -V monofont="Liberation Mono" \
+            --highlight-style=tango \
+            --toc \
+            --toc-depth=2
+
+      - name: Commit and push generated PDF
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add "docs/Email-Spam-Detector-Documentation-2026.pdf" "docs/old/"
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "docs: auto-generate Email-Spam-Detector-Documentation-2026.pdf from Markdown [skip ci]"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
